@@ -3,7 +3,7 @@ import json
 from fastapi import FastAPI
 from torch.utils.data import DataLoader
 from ai.predict import predict_anomaly
-from ai.set_data import MovementDataset
+from SecurityUE5_AI.data_join.set_data import MovementDataset
 from ai.train import train_model
 
 class LogResult():
@@ -11,47 +11,109 @@ class LogResult():
         self.player_id = player_id
         self.abnormal_ratio = abnormal_ratio
 
+# 훈련용 데이터 가공 및 저장
+data_list = []
+data_lists = []
 
+for log_id in range(10000):
+    response = requests.get(f"http://~~~~ 디비 주소/api/log/{log_id}")
 
-# 디비와의 통신 GET
-app = FastAPI()
+    if response.status_code != 200:
+        print("로그 가져오기 실패:", response.status_code)
 
-response = requests.get(f"http://~~~~ 디비 주소/api/log/{log_id}")
+        with open("temp.txt", "w") as f:
+            f.write(str(log_id))
 
-if response.status_code == 200:
-    data = response.json()
+        break
 
-    player_id = data["player_id"]
-    sequence = data["sequence"]
+    datas = response.json()
 
-    print(player_id)
-    print(sequence)
-else:
-    print("로그 가져오기 실패:", response.status_code)
+    if len(datas) != 30:
+        print(f"{log_id}번 로그는 데이터 개수가 30개가 아니라서 넘어갑니다.")
+        continue
 
+    current_time = datas[0]["timestamp"]
+    current_label = datas[0]["label"]
+
+    data_list = []
+    err = False
+
+    for data in datas:
+        userId = data["userId"]
+        timestamp = data["timestamp"]
+
+        label = data["label"]
+
+        if current_time > timestamp or current_label != label:
+            err = True
+            print("리스트의 순서가 틀리거나 핵 사용 여부가 변경되어 해당 데이터는 넘어갑니다.")
+            break
+
+        current_time = timestamp
+
+        location = data["location"]
+        x = location["x"]
+        y = location["y"]
+        z = location["z"]
+
+        speed = data["speed"]
+
+        rotation = data["rotation"]
+        pitch = rotation["pitch"]
+        yaw = rotation["yaw"]
+        roll = rotation["roll"]
+
+        delta = data["deltaRotation"]
+        d_pitch = delta["pitch"]
+        d_yaw = delta["yaw"]
+        d_roll = delta["roll"]
+
+        hp = data["currentHP"]
+        distance = data["targetDistance"]
+        angle = data["targetAngle"]
+        visible = data["bIsTargetVisible"]
+
+        data_list.append([
+            timestamp,
+            x, y, z,
+            speed,
+            pitch, yaw, roll,
+            d_pitch, d_yaw, d_roll,
+            hp,
+            distance,
+            angle,
+            visible,
+            label
+        ])
+
+        print(
+            f"{label},{userId},{timestamp},{x},{y},{z},"
+            f"{speed},{pitch},{yaw},{roll},"
+            f"{d_pitch},{d_yaw},{d_roll},"
+            f"{hp},{distance},{angle},{visible}"
+        )
+
+    if not err:
+        data_lists.append(data_list)
+
+        
+data_folder = "data/"
 
 # 데이터셋 생성
+with open(data_folder + "output.jsonl", "w", encoding="utf-8") as f:
+    for data_list in data_lists:
+        obj = {
+            "frames": [row[:-1] for row in data_list],
+            "label": data_list[0][-1]
+        }
+        f.write(json.dumps(obj) + "\n")
 
 
-dataset = MovementDataset(
-    jsonl_path="movement_train.jsonl",
-    sequence_length=30,
-    feature_dim=12
-)
 
-train_loader = DataLoader(
-    dataset,
-    batch_size=64,
-    shuffle=True
-)
+# # 결과를 저장하고 디비와의 통신 POST
+# result = LogResult(player_id=player_id, abnormal_ratio=predict_anomaly(sequence))
 
-model = train_model(train_loader, epochs=10)
-
-
-# 결과를 저장하고 디비와의 통신 POST
-result = LogResult(player_id=player_id, abnormal_ratio=predict_anomaly(sequence))
-
-response = requests.post(
-    "http://~~~~~ 디비 주소/analysis_result",
-    json=result
-)
+# response = requests.post(
+#     "http://~~~~~ 디비 주소/analysis_result",
+#     json=result
+# )
