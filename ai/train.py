@@ -4,7 +4,7 @@ import torch.nn as nn
 
 
 def train_model(train_loader, epochs=10, device="cpu"):
-    model = MovementAnomalyRNN(feature_dim=12).to(device)
+    model = MovementAnomalyRNN(feature_dim=15).to(device)
 
     criterion = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)

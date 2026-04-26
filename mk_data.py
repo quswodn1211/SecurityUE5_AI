@@ -1,22 +1,26 @@
 import requests
 import json
-from fastapi import FastAPI
-from torch.utils.data import DataLoader
-from ai.predict import predict_anomaly
-from SecurityUE5_AI.data_join.set_data import MovementDataset
-from ai.train import train_model
+# from ai.predict import predict_anomaly
+# from ai.train import train_model
+
+
 
 class LogResult():
     def __init__(self, player_id: int, abnormal_ratio: float):
         self.player_id = player_id
         self.abnormal_ratio = abnormal_ratio
 
+
+
 # 훈련용 데이터 가공 및 저장
 data_list = []
 data_lists = []
 
-for log_id in range(10000):
-    response = requests.get(f"http://~~~~ 디비 주소/api/log/{log_id}")
+print(f"로그 처리 시작...")
+
+for log_id in range(5,10000):
+    print(f"{log_id}번 로그 처리 중...")
+    response = requests.get(f"https://perfectly-curdle-gecko.ngrok-free.dev/api/log?logId={log_id}")
 
     if response.status_code != 200:
         print("로그 가져오기 실패:", response.status_code)
@@ -26,7 +30,8 @@ for log_id in range(10000):
 
         break
 
-    datas = response.json()
+    datas = response.json()["log"]["event_data"]
+    
 
     if len(datas) != 30:
         print(f"{log_id}번 로그는 데이터 개수가 30개가 아니라서 넘어갑니다.")
@@ -87,10 +92,7 @@ for log_id in range(10000):
         ])
 
         print(
-            f"{label},{userId},{timestamp},{x},{y},{z},"
-            f"{speed},{pitch},{yaw},{roll},"
-            f"{d_pitch},{d_yaw},{d_roll},"
-            f"{hp},{distance},{angle},{visible}"
+            f"{timestamp}"
         )
 
     if not err:
