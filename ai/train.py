@@ -1,7 +1,6 @@
-from AnomalyDataRNN import MovementAnomalyRNN
 import torch
 import torch.nn as nn
-
+from MovementAnomalyRNN import MovementAnomalyRNN
 
 def train_model(train_loader, epochs=10, device="cpu"):
     model = MovementAnomalyRNN(feature_dim=15).to(device)

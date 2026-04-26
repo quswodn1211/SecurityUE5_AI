@@ -1,10 +1,11 @@
-import requests
-import json
+import sys
+print(sys.executable)
 from torch.utils.data import DataLoader
-from data_join.set_data import MovementJsonlDataset
-from ai.train import train_model
+from set_data import MovementJsonlDataset
+from train import train_model
+from predict import predict_anomaly
 
-data_folder = "data/"
+data_folder = "C:/src/capstone/SecurityUE5_AI/data/"
 
 dataset = MovementJsonlDataset(
     jsonl_path=data_folder + "output.jsonl",
@@ -20,3 +21,4 @@ train_loader = DataLoader(
 
 print("훈련 시작")
 model = train_model(train_loader, epochs=10)
+
