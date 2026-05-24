@@ -146,7 +146,7 @@ def normalize_frames(payload: Any) -> list[list[float]]:
 
 
 def build_result(payload: Any, prediction: dict[str, Any]) -> dict[str, Any]:
-    if not isinstance(payload, dict):
+    if not isinstance(payload, list[]):
         return {
             "player_id": None,
             "log_id": None,
