@@ -219,7 +219,13 @@ def receive_game_log(payload: Any = Body(...)) -> dict[str, Any]:
         ) from exc
 
     result = build_result(payload, prediction, log_id)
-    forward_result = send_analysis_result(result)
+    if result["prediction"]["predicted_label"] != "정상":
+        forward_result = send_analysis_result(result)
+    else:
+        raise HTTPException(
+            status_code=422,
+            detail="Anomaly detected: " + result["prediction"]["predicted_label"],
+        )
 
     return {
         "ok": True,
