@@ -1,0 +1,3 @@
+.cache/pip/
+ai/__pycache__/
+models/

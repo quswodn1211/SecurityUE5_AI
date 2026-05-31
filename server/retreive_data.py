@@ -219,7 +219,7 @@ def receive_game_log(payload: Any = Body(...)) -> dict[str, Any]:
         ) from exc
 
     result = build_result(payload, prediction, log_id, user_id)
-    if result["prediction"]["predicted_label"] != "정상":
+    if result["prediction"]["predicted_label"] not in ["정상", "의심"]:
         forward_result = send_analysis_result(result)
     else:
         forward_result = {"ok": True, "message": "No anomaly detected, not forwarded to web server."}
