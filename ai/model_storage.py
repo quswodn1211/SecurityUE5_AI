@@ -53,5 +53,6 @@ def get_latest_model_path() -> Path:
         raise FileNotFoundError(
             f"No model file found in {MODEL_DIR}. Train the model first."
         )
+    print(model_paths[-1])
 
     return model_paths[-1]

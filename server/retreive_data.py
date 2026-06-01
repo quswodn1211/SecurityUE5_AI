@@ -170,13 +170,13 @@ def build_result(payload: Any, prediction: dict[str, Any], log_id: str = None, u
     
     if not isinstance(payload, list):
         return {
-            "player_id": user_id,
+            "user_id": user_id,
             "log_id": log_id,
             "prediction": prediction,
         }
 
     return {
-        "player_id": user_id,
+        "user_id": user_id,
         "log_id": log_id,
         "prediction": prediction,
     }
@@ -199,6 +199,8 @@ def receive_game_log(payload: Any = Body(...)) -> dict[str, Any]:
             status_code=503,
             detail=f"Prediction module could not be loaded: {PREDICT_IMPORT_ERROR}",
         )
+
+    #print("[AI] 입력받은 데이터:", payload)
     # payload is {log_id:..., frames: [{}, {}, ...]
     log_id = payload.get("log_id")
     user_id = payload.get("user_id")
@@ -219,11 +221,13 @@ def receive_game_log(payload: Any = Body(...)) -> dict[str, Any]:
         ) from exc
 
     result = build_result(payload, prediction, log_id, user_id)
+    print("[AI] 로그 분석 결과:", result)
     if result["prediction"]["predicted_label"] not in ["정상", "의심"]:
         forward_result = send_analysis_result(result)
+        
     else:
         forward_result = {"ok": True, "message": "No anomaly detected, not forwarded to web server."}
-
+    print(f"[AI] 웹 서버로 전달 결과: {forward_result}")
     return {
         "ok": True,
         "result": result,
