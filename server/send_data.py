@@ -5,7 +5,7 @@ from urllib import error, request
 
 
 DEFAULT_TIMEOUT_SECONDS = 10
-
+data_num = 0
 
 def get_web_server_url() -> str | None:
     return os.getenv("WEB_SERVER_ANALYSIS_URL", "http://ec2-13-124-52-143.ap-northeast-2.compute.amazonaws.com:8000/api/detect/analyze") or os.getenv("AWS_WEB_SERVER_ANALYSIS_URL")
@@ -16,13 +16,20 @@ def send_analysis_result(
     url: str | None = None,
     timeout: int = DEFAULT_TIMEOUT_SECONDS,
 ) -> dict[str, Any]:
+    global data_num
     target_url = url or get_web_server_url()
     if not target_url:
         return {
             "forwarded": False,
             "reason": "WEB_SERVER_ANALYSIS_URL is not configured.",
         }
-
+    data_num += 1
+    if data_num % 5 != 0:  # Forward only 1 out of every 5 data points
+        return {
+            "forwarded": False,
+            "reason": "not ..1 th data",
+        }
+    
     body = json.dumps(result, ensure_ascii=False).encode("utf-8")
     req = request.Request(
         target_url,
